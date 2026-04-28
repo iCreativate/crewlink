@@ -47,10 +47,17 @@ export function LoginForm() {
     }
 
     const meRes = await fetch("/api/me", { credentials: "include" });
-    const meBody = (await meRes.json().catch(() => null)) as MeResponse | { authenticated?: false } | null;
+    const meBody = (await meRes.json().catch(() => null)) as
+      | (MeResponse & { error?: never; hint?: never })
+      | { authenticated?: false; error?: string; hint?: string }
+      | null;
     if (!meBody || !("authenticated" in meBody) || !meBody.authenticated) {
       setPending(false);
-      setError("Signed in but profile could not be loaded. Try again.");
+      const msg =
+        (meBody && typeof (meBody as any).error === "string" && (meBody as any).error) ||
+        "Signed in but profile could not be loaded. Try again.";
+      const hint = meBody && typeof (meBody as any).hint === "string" ? (meBody as any).hint : null;
+      setError(hint ? `${msg} ${hint}` : msg);
       return;
     }
     const me = meBody as MeResponse;

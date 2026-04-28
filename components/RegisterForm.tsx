@@ -49,10 +49,14 @@ export function RegisterForm() {
       setPending(false);
       const meBody = (await meRes.json().catch(() => null)) as
         | { authenticated: true; role: "FREELANCER" | "MEDIA_HOUSE" }
-        | { authenticated?: false }
+        | { authenticated?: false; error?: string; hint?: string }
         | null;
       if (!meBody || !meBody.authenticated) {
-        setError("Account created but profile sync failed. Try signing in.");
+        const msg =
+          (meBody && typeof (meBody as any).error === "string" && (meBody as any).error) ||
+          "Account created but profile sync failed. Try signing in.";
+        const hint = meBody && typeof (meBody as any).hint === "string" ? (meBody as any).hint : null;
+        setError(hint ? `${msg} ${hint}` : msg);
         return;
       }
       const me = meBody;
