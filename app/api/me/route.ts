@@ -22,12 +22,17 @@ export async function GET() {
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
+    // Ensure the real error is visible in Vercel Function logs.
+    console.error("[GET /api/me] failed", err);
     return NextResponse.json({
       authenticated: false as const,
       error: "Signed in, but the server could not load your profile.",
-      hint: message.includes("DATABASE_URL")
-        ? "Missing DATABASE_URL. Set it in Vercel (Project → Settings → Environment Variables) and redeploy."
-        : "Check Vercel Function logs for the underlying error.",
+      hint:
+        message.includes("DATABASE_URL") ||
+        message.includes("PrismaClientInitializationError") ||
+        message.includes("PrismaClientKnownRequestError")
+          ? "Database connection is failing. Confirm DATABASE_URL is set in Vercel (Production + Preview) and redeploy."
+          : "Check Vercel Function logs for the underlying error.",
     });
   }
 }
