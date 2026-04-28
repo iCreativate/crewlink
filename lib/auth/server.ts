@@ -15,6 +15,7 @@ export { postLoginPathForRole };
 
 export async function getAuthContext(): Promise<AuthContext | null> {
   const supabase = await createClient();
+  if (!supabase) return null;
   const {
     data: { user: supabaseUser },
   } = await supabase.auth.getUser();
