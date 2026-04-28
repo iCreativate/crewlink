@@ -1,0 +1,25 @@
+# Optional local Postgres — only if you are not using Supabase hosted Postgres.
+# Start with: docker compose --profile local-postgres up -d
+# Default workflow: use Supabase (see .env.example → DATABASE_URL + DIRECT_URL).
+
+services:
+  postgres:
+    profiles: ["local-postgres"]
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: crewlink
+      POSTGRES_PASSWORD: crewlink
+      POSTGRES_DB: crewlink
+    ports:
+      - "5432:5432"
+    volumes:
+      - crewlink_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crewlink -d crewlink"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  crewlink_pg:

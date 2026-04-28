@@ -1,0 +1,349 @@
+// CrewLink — PostgreSQL schema (User.id matches Supabase Auth user id)
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "darwin-arm64"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  /// Pooled connection (Supabase “Transaction pooler”, port 6543 + `pgbouncer=true`) for the app.
+  url       = env("DATABASE_URL")
+  /// Direct connection (port 5432) for `prisma migrate` / introspection — required when DATABASE_URL uses PgBouncer.
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  FREELANCER
+  MEDIA_HOUSE
+}
+
+enum JobStatus {
+  OPEN
+  FILLED
+  CLOSED
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
+
+enum ReactionType {
+  LIKE
+  LOVE
+  HAHA
+  WOW
+  SAD
+  ANGRY
+}
+
+enum FeedPostKind {
+  POST
+  AD
+}
+
+enum FeedAdType {
+  SPONSORED_POST
+  OPPORTUNITY
+  FEATURED_CREATOR
+}
+
+model User {
+  id            String    @id
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  role          UserRole
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  boostedUntil  DateTime?
+
+  profile        Profile?
+  jobsPosted     Job[]           @relation("JobPoster")
+  jobsAccepted   Job[]           @relation("JobAccepter")
+  jobsInvitedTo  Job[]           @relation("JobInvitee")
+  jobApplications JobApplication[]
+  sentJobMessages JobMessage[] @relation("JobMessageSender")
+  receivedJobMessages JobMessage[] @relation("JobMessageRecipient")
+  notifications Notification[]
+  portfolioItems PortfolioItem[]
+  portfolioLikes PortfolioLike[]
+  portfolioSaves PortfolioSave[]
+  feedPosts       FeedPost[]
+  feedPostLikes   FeedPostLike[]
+  feedPostComments FeedPostComment[]
+  feedPostReactions FeedPostReaction[]
+  following UserFollow[] @relation("UserFollowing")
+  followers UserFollow[] @relation("UserFollowers")
+  crewTemplates  CrewTemplate[]
+  crewRoleSlots  CrewTemplateRole[] @relation("CrewTemplateRoleAssignee")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String?
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, readAt])
+}
+
+model UserFollow {
+  id           String   @id @default(cuid())
+  followerId   String
+  follower     User     @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId  String
+  following    User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+model Profile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  headline        String?
+  bio             String?  @db.Text
+  location        String?
+  website         String?
+  companyName     String?
+  specializations String[] @default([])
+  gearTags        String[] @default([])
+  availableNow    Boolean  @default(false)
+  updatedAt       DateTime @updatedAt
+
+  @@index([availableNow])
+}
+
+model Job {
+  id               String    @id @default(cuid())
+  title            String
+  description      String    @default("") @db.Text
+  budgetMin        Int?
+  budgetMax        Int?
+  location         String?
+  startsAt         DateTime?
+  payRate          String?
+  gearRequirements String[]  @default([])
+  /// When set, only this freelancer may accept the job (direct crew booking).
+  invitedFreelancerId String?
+  invitedFreelancer   User?     @relation("JobInvitee", fields: [invitedFreelancerId], references: [id], onDelete: SetNull)
+  /// Role label from a crew template (e.g. "LED Tech").
+  crewRoleLabel    String?
+  /// Urgent listing — targeted real-time alert to nearby freelancers.
+  emergencyMode    Boolean   @default(false)
+  status           JobStatus @default(OPEN)
+  posterId         String
+  poster           User      @relation("JobPoster", fields: [posterId], references: [id], onDelete: Cascade)
+  acceptedById     String?
+  acceptedAt       DateTime?
+  acceptedBy       User?     @relation("JobAccepter", fields: [acceptedById], references: [id], onDelete: SetNull)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  applications JobApplication[]
+  messages     JobMessage[]
+
+  @@index([createdAt(sort: Desc)])
+  @@index([status])
+  @@index([startsAt])
+  @@index([invitedFreelancerId])
+  @@index([emergencyMode])
+}
+
+model JobApplication {
+  id         String   @id @default(cuid())
+  jobId      String
+  job        Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  proposal   String   @db.Text
+  createdAt  DateTime @default(now())
+
+  @@unique([jobId, userId])
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
+}
+
+model JobMessage {
+  id          String   @id @default(cuid())
+  jobId       String
+  job         Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  senderId    String
+  sender      User     @relation("JobMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipientId String
+  recipient   User     @relation("JobMessageRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  body        String   @db.Text
+  createdAt   DateTime @default(now())
+
+  @@index([jobId, createdAt(sort: Desc)])
+  @@index([senderId])
+  @@index([recipientId])
+}
+
+model CrewTemplate {
+  id          String   @id @default(cuid())
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name        String
+  description String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  roles       CrewTemplateRole[]
+
+  @@index([ownerId])
+}
+
+model CrewTemplateRole {
+  id                   String       @id @default(cuid())
+  templateId           String
+  template             CrewTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  roleName             String
+  sortOrder            Int          @default(0)
+  assignedFreelancerId String?
+  assignedFreelancer   User?        @relation("CrewTemplateRoleAssignee", fields: [assignedFreelancerId], references: [id], onDelete: SetNull)
+
+  @@index([templateId])
+  @@index([assignedFreelancerId])
+}
+
+model PortfolioItem {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String?
+  description String?   @db.Text
+  gearTags    String[]  @default([])
+  mediaType   MediaType
+  url         String
+  createdAt   DateTime  @default(now())
+
+  likes PortfolioLike[]
+  saves PortfolioSave[]
+
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
+}
+
+model PortfolioLike {
+  id        String        @id @default(cuid())
+  itemId    String
+  item      PortfolioItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+
+  @@unique([itemId, userId])
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
+}
+
+model PortfolioSave {
+  id        String        @id @default(cuid())
+  itemId    String
+  item      PortfolioItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+
+  @@unique([itemId, userId])
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
+}
+
+model FeedPost {
+  id           String    @id @default(cuid())
+  authorId     String
+  author       User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body         String    @db.Text
+  mediaType    MediaType?
+  mediaUrl     String?
+  kind         FeedPostKind @default(POST)
+  adType       FeedAdType?
+  ctaLabel     String?
+  ctaHref      String?
+  bts          Boolean   @default(false)
+  collab       Boolean   @default(false)
+  collabNote   String?
+  location     String?
+  collaborators String[] @default([])
+  sharedPostId String?
+  sharedPost   FeedPost? @relation("FeedPostShare", fields: [sharedPostId], references: [id], onDelete: SetNull)
+  shares       FeedPost[] @relation("FeedPostShare")
+  createdAt    DateTime  @default(now())
+  boostedUntil DateTime?
+
+  mediaItems   FeedPostMedia[]
+  likes FeedPostLike[]
+  reactions FeedPostReaction[]
+  comments FeedPostComment[]
+
+  @@index([authorId])
+  @@index([createdAt(sort: Desc)])
+  @@index([sharedPostId])
+  @@index([boostedUntil])
+}
+
+model FeedPostReaction {
+  id        String       @id @default(cuid())
+  postId    String
+  post      FeedPost     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      ReactionType
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@unique([postId, userId])
+  @@index([postId, type])
+  @@index([userId])
+}
+
+model FeedPostMedia {
+  id        String    @id @default(cuid())
+  postId    String
+  post      FeedPost  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  mediaType MediaType
+  url       String
+  sortOrder Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  @@index([postId, sortOrder])
+}
+
+model FeedPostComment {
+  id        String   @id @default(cuid())
+  postId    String
+  post      FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  body      String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([postId, createdAt(sort: Desc)])
+  @@index([authorId])
+}
+
+model FeedPostLike {
+  id        String   @id @default(cuid())
+  postId    String
+  post      FeedPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([userId])
+  @@index([createdAt(sort: Desc)])
+}
