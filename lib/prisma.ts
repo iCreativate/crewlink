@@ -22,6 +22,25 @@ function logDatabaseUrlShapeOnce() {
       database: u.pathname.replace(/^\//, "") || "(none)",
       params,
     });
+
+    // Common footgun: using Supabase "Transaction pooler" (PgBouncer) without telling Prisma.
+    // This often manifests as: prepared statement "s0" already exists.
+    const port = u.port || "";
+    const looksLikeTransactionPooler = port === "6543" || params.includes("pgbouncer");
+    const hasPgbouncerParam = u.searchParams.get("pgbouncer") === "true";
+    const statementCacheSize = u.searchParams.get("statement_cache_size");
+
+    if (looksLikeTransactionPooler && !hasPgbouncerParam) {
+      console.warn(
+        "[prisma] DATABASE_URL looks pooled (PgBouncer) but is missing `pgbouncer=true` (can cause prepared statement errors).",
+      );
+    }
+
+    if (looksLikeTransactionPooler && statementCacheSize !== "0") {
+      console.warn(
+        "[prisma] For PgBouncer/transaction pooling, add `statement_cache_size=0` to DATABASE_URL to avoid prepared statement collisions.",
+      );
+    }
   } catch {
     console.warn("[prisma] DATABASE_URL is set but not a valid URL");
   }

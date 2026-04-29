@@ -11,6 +11,14 @@ const dev = process.env.NODE_ENV !== "production";
 const hostname = process.env.HOSTNAME || "localhost";
 const port = Number(process.env.PORT) || 3000;
 
+process.on("uncaughtException", (err) => {
+  console.error("[server] uncaughtException", err);
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("[server] unhandledRejection", reason);
+});
+
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
@@ -38,5 +46,7 @@ io.on("connection", (socket) => {
 });
 
 server.listen(port, () => {
-  console.log(`> Ready on http://${hostname}:${port} (Socket.io /socket.io/)`);
+  console.log(
+    `> Ready on http://${hostname}:${port} (Socket.io /socket.io/) dev=${dev} NODE_ENV=${process.env.NODE_ENV ?? ""}`,
+  );
 });
