@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node server.mjs",
+    "dev": "NEXT_DISABLE_TURBOPACK=1 node server.mjs",
     "dev3002": "PORT=3002 node server.mjs",
     "dev:next": "next dev",
     "build": "prisma generate && next build",
