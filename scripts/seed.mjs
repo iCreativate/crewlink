@@ -55,7 +55,7 @@ async function main() {
   const tag = "seed";
 
   // If we already seeded, delete previous seed records so reruns update content.
-  const seedEmailEndsWith = `.${tag}@crewlink.local`;
+  const seedEmailEndsWith = `.${tag}@gr8crew.local`;
   const existingSeedUsers = await prisma.user.findMany({
     where: { email: { endsWith: seedEmailEndsWith } },
     select: { id: true },
@@ -76,7 +76,7 @@ async function main() {
   const mediaHouses = await Promise.all(
     Array.from({ length: 3 }).map(async (_v, i) => {
       const id = uuid();
-      const email = `media${i + 1}.${tag}@crewlink.local`;
+      const email = `media${i + 1}.${tag}@gr8crew.local`;
       return prisma.user.create({
         data: {
           id,
@@ -112,7 +112,7 @@ async function main() {
         "Quinn Rivera",
         "Jamie Chen",
       ][i];
-      const email = `freelancer${i + 1}.${tag}@crewlink.local`;
+      const email = `freelancer${i + 1}.${tag}@gr8crew.local`;
       const specs = sample(SPECIALIZATIONS, Math.random() < 0.4 ? 2 : 1);
       return prisma.user.create({
         data: {

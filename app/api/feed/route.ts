@@ -59,6 +59,11 @@ export async function POST(req: Request) {
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
 
+  const kind = parsed.data.kind ?? "POST";
+  if (kind === "AD" && ctx.appUser.role !== "MEDIA_HOUSE") {
+    return NextResponse.json({ error: "Only media houses can publish feed ads." }, { status: 403 });
+  }
+
   if ((parsed.data.mediaType && !parsed.data.mediaUrl) || (!parsed.data.mediaType && parsed.data.mediaUrl)) {
     return NextResponse.json({ error: "mediaType and mediaUrl must be provided together." }, { status: 400 });
   }
@@ -72,7 +77,7 @@ export async function POST(req: Request) {
     mediaType: parsed.data.mediaType ?? null,
     mediaUrl: parsed.data.mediaUrl ?? null,
     mediaItems: parsed.data.mediaItems ?? null,
-    kind: parsed.data.kind ?? "POST",
+    kind,
     adType: parsed.data.adType ?? null,
     ctaLabel: parsed.data.ctaLabel ?? null,
     ctaHref: parsed.data.ctaHref ?? null,

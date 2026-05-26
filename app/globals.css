@@ -277,7 +277,7 @@ body {
   }
 }
 
-@keyframes crewlink-shimmer {
+@keyframes gr8crew-shimmer {
   0% {
     background-position: 100% 0;
   }
@@ -286,7 +286,7 @@ body {
   }
 }
 
-.crewlink-shimmer {
+.gr8crew-shimmer {
   background-image: linear-gradient(
     90deg,
     rgba(24, 24, 27, 0.06) 0%,
@@ -295,11 +295,11 @@ body {
     rgba(24, 24, 27, 0.06) 100%
   );
   background-size: 200% 100%;
-  animation: crewlink-shimmer 1.2s ease-in-out infinite;
+  animation: gr8crew-shimmer 1.2s ease-in-out infinite;
 }
 
 @media (prefers-color-scheme: dark) {
-  .crewlink-shimmer {
+  .gr8crew-shimmer {
     background-image: linear-gradient(
       90deg,
       rgba(255, 255, 255, 0.06) 0%,

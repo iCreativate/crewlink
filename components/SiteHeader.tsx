@@ -10,7 +10,7 @@ export async function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-zinc-200/80 bg-white/90 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/90">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Link href="/" className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-white">
-          Crew<span className="text-sky-600 dark:text-sky-400">Link</span>
+          gr8<span className="text-sky-600 dark:text-sky-400">crew</span>
         </Link>
         <nav className="flex flex-wrap items-center gap-2 text-sm sm:gap-4">
           <Link className="text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white" href="/jobs">

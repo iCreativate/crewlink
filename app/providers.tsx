@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { ToastProvider } from "@/components/ui/ToastProvider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -30,5 +31,5 @@ export function Providers({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  return children;
+  return <ToastProvider>{children}</ToastProvider>;
 }

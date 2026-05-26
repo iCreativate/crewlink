@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getAuthContext } from "@/lib/auth/server";
 import { getFeaturedOpportunity } from "@/lib/opportunities";
 
 export default async function OpportunityDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -7,11 +8,15 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
   const opp = getFeaturedOpportunity(id);
   if (!opp) notFound();
 
+  const ctx = await getAuthContext();
+  const backHref = ctx?.appUser ? "/feed" : "/jobs";
+  const backLabel = ctx?.appUser ? "Back to feed" : "Back to jobs";
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <p className="meta-text">
-        <Link href="/feed" className="hover:underline">
-          ← Back to feed
+        <Link href={backHref} className="hover:underline">
+          ← {backLabel}
         </Link>
       </p>
 
@@ -53,7 +58,7 @@ export default async function OpportunityDetailPage({ params }: { params: Promis
           <Link href="/jobs" className="primary-button">
             View similar jobs
           </Link>
-          <Link href="/feed" className="pill-button">
+          <Link href={backHref} className="pill-button">
             Back
           </Link>
         </div>

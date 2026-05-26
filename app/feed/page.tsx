@@ -59,7 +59,9 @@ export default async function FeedPage() {
               </div>
             </div>
 
-            <FeedComposer viewer={{ name: displayName, image: user?.image ?? null }} viewerRole={ctx.appUser.role} />
+            <div id="feed-composer">
+              <FeedComposer viewer={{ name: displayName, image: user?.image ?? null }} viewerRole={ctx.appUser.role} />
+            </div>
             <FeedList />
           </main>
 

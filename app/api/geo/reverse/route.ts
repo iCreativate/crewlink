@@ -33,7 +33,7 @@ async function reverseNominatim(lat: number, lng: number) {
   const res = await fetch(url, {
     // Nominatim policy: identify your application.
     headers: {
-      "User-Agent": "CrewLink/0.1 (reverse geocoding)",
+      "User-Agent": "gr8crew/0.1 (reverse geocoding)",
       Accept: "application/json",
     },
     cache: "no-store",
@@ -77,7 +77,7 @@ export async function GET(req: Request) {
   const now = Date.now();
 
   const g = globalThis as unknown as Record<string, ReverseCache | undefined>;
-  const cacheId = `__crewlink_reverse_${key}`;
+  const cacheId = `__gr8crew_reverse_${key}`;
   const cached = g[cacheId];
   if (cached && now - cached.fetchedAtMs < ttlMs) {
     return NextResponse.json({ ...cached.payload, cached: true });

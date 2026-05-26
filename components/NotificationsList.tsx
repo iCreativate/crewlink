@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { readApiError } from "@/lib/http";
 
 type Notification = {
   id: string;
@@ -15,22 +17,82 @@ type Notification = {
 export function NotificationsList() {
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetch("/api/notifications")
-      .then((r) => r.json())
-      .then((json: { items?: Notification[] }) => setItems(Array.isArray(json.items) ? json.items : []))
-      .finally(() => setLoading(false));
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/notifications", { credentials: "include" });
+      if (res.status === 401) {
+        setError("Sign in to view notifications.");
+        setItems([]);
+        return;
+      }
+      if (!res.ok) {
+        setError(await readApiError(res, "Could not load notifications."));
+        setItems([]);
+        return;
+      }
+      const json = (await res.json()) as { items?: Notification[] };
+      setItems(Array.isArray(json.items) ? json.items : []);
+    } catch {
+      setError("Could not load notifications.");
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    void load();
+  }, [load]);
+
   async function markRead(id: string) {
-    await fetch(`/api/notifications/${encodeURIComponent(id)}/read`, { method: "POST" });
+    const res = await fetch(`/api/notifications/${encodeURIComponent(id)}/read`, {
+      method: "POST",
+      credentials: "include",
+    });
+    if (!res.ok) return;
     setItems((prev) => prev.map((n) => (n.id === id ? { ...n, readAt: new Date().toISOString() } : n)));
   }
 
-  if (loading) return <p className="text-sm text-zinc-500 dark:text-zinc-400">Loading…</p>;
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-20 animate-pulse rounded-2xl bg-zinc-100 dark:bg-zinc-900" />
+        ))}
+      </div>
+    );
+  }
 
-  if (!items.length) return <p className="text-sm text-zinc-500 dark:text-zinc-400">No notifications yet.</p>;
+  if (error) {
+    return (
+      <div className="rounded-2xl border border-red-200 bg-red-50/80 p-6 text-sm dark:border-red-900/60 dark:bg-red-950/30">
+        <p className="text-red-900 dark:text-red-100">{error}</p>
+        <button
+          type="button"
+          onClick={() => void load()}
+          className="mt-4 rounded-lg bg-red-700 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  if (!items.length) {
+    return (
+      <div className="rounded-2xl border border-dashed border-zinc-200 bg-zinc-50 p-8 text-center text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/40 dark:text-zinc-400">
+        <p>No notifications yet.</p>
+        <p className="mt-2">When you receive offers or messages, they will appear here.</p>
+        <Link href="/jobs" className="mt-4 inline-block text-sm font-semibold text-sky-700 hover:underline dark:text-sky-400">
+          Browse jobs
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <ul className="space-y-3">
@@ -48,9 +110,12 @@ export function NotificationsList() {
               {n.body ? <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">{n.body}</p> : null}
               <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">{new Date(n.createdAt).toLocaleString()}</p>
               {n.href ? (
-                <a href={n.href} className="mt-2 inline-block text-xs font-semibold text-sky-700 hover:underline dark:text-sky-400">
+                <Link
+                  href={n.href}
+                  className="mt-2 inline-block text-xs font-semibold text-sky-700 hover:underline dark:text-sky-400"
+                >
                   Open
-                </a>
+                </Link>
               ) : null}
             </div>
             {!n.readAt ? (
@@ -64,4 +129,3 @@ export function NotificationsList() {
     </ul>
   );
 }
-

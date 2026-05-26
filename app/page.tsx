@@ -21,7 +21,7 @@ export default async function Home() {
         </p>
         <h1 className="mt-4 text-4xl font-bold tracking-tight text-zinc-900 sm:text-5xl dark:text-white">
           Hire talent and book jobs with{" "}
-          <span className="text-sky-600 dark:text-sky-400">CrewLink</span>
+          <span className="text-sky-600 dark:text-sky-400">gr8crew</span>
         </h1>
         <p className="mt-6 text-lg leading-8 text-zinc-600 dark:text-zinc-400">
           Freelancers showcase reels and stills; media houses post roles with budgets and locations. Real-time job

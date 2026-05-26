@@ -15,8 +15,8 @@ function useCurrency() {
   useEffect(() => {
     const sync = () => setCurrency(getSavedCurrency());
     sync();
-    window.addEventListener("crewlink:currency", sync);
-    return () => window.removeEventListener("crewlink:currency", sync);
+    window.addEventListener("gr8crew:currency", sync);
+    return () => window.removeEventListener("gr8crew:currency", sync);
   }, []);
   return currency;
 }

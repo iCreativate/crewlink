@@ -2,12 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useToast } from "@/components/ui/ToastProvider";
 import { createClient } from "@/lib/supabase/client";
 import { postLoginPathForRole } from "@/lib/auth/post-login";
 
 export function RegisterForm() {
   const router = useRouter();
+  const search = useSearchParams();
+  const toast = useToast();
+  const callbackUrl = search.get("callbackUrl");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -60,13 +64,17 @@ export function RegisterForm() {
         return;
       }
       const me = meBody;
-      router.push(postLoginPathForRole(me.role));
+      const safeCallback =
+        callbackUrl && callbackUrl.startsWith("/") && !callbackUrl.startsWith("//") ? callbackUrl : null;
+      toast.success("Account created. Welcome to gr8crew!");
+      router.push(safeCallback ?? postLoginPathForRole(me.role));
       router.refresh();
       return;
     }
 
     setPending(false);
     setInfo("Check your email for a confirmation link. After confirming, you can sign in.");
+    toast.success("Check your email to confirm your account.");
   }
 
   return (
@@ -74,7 +82,7 @@ export function RegisterForm() {
       <div>
         <h1 className="text-2xl font-semibold text-zinc-900 dark:text-white">Create account</h1>
         <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-          Join as a freelancer or a media house. Role is stored in CrewLink after your first sign-in.
+          Join as a freelancer or a media house. Role is stored in gr8crew after your first sign-in.
         </p>
       </div>
       {error ? <p className="text-sm text-red-600 dark:text-red-400">{error}</p> : null}
@@ -155,7 +163,10 @@ export function RegisterForm() {
       </button>
       <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
         Already registered?{" "}
-        <Link href="/login" className="font-medium text-sky-700 hover:underline dark:text-sky-400">
+        <Link
+          href={callbackUrl ? `/login?callbackUrl=${encodeURIComponent(callbackUrl)}` : "/login"}
+          className="font-medium text-sky-700 hover:underline dark:text-sky-400"
+        >
           Sign in
         </Link>
       </p>

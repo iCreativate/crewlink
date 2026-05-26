@@ -3,10 +3,13 @@ import { createServerClient } from "@supabase/ssr";
 
 const PROTECTED_PREFIXES = [
   "/dashboard",
+  "/feed",
   "/jobs/new",
   "/portfolio/manage",
   "/profile/edit",
 ];
+
+const AUTH_PAGES = ["/login", "/register"];
 
 function isProtectedPath(pathname: string) {
   return PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -21,7 +24,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  let supabaseResponse = NextResponse.next({ request });
+  const pathname = request.nextUrl.pathname;
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
+
+  let supabaseResponse = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
 
   const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -29,7 +38,9 @@ export async function proxy(request: NextRequest) {
         return request.cookies.getAll();
       },
       setAll(cookiesToSet) {
-        supabaseResponse = NextResponse.next({ request });
+        supabaseResponse = NextResponse.next({
+          request: { headers: requestHeaders },
+        });
         cookiesToSet.forEach(({ name, value, options }) => {
           supabaseResponse.cookies.set(name, value, options);
         });
@@ -41,7 +52,10 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const pathname = request.nextUrl.pathname;
+  if (user && AUTH_PAGES.includes(pathname)) {
+    return NextResponse.redirect(new URL("/dashboard", request.nextUrl.origin));
+  }
+
   if (isProtectedPath(pathname) && !user) {
     const login = new URL("/login", request.nextUrl.origin);
     login.searchParams.set("callbackUrl", pathname);

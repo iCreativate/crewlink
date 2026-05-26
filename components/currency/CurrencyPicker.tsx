@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 type CurrencyCode = "ZAR" | "USD" | "EUR" | "GBP";
 
-const KEY = "crewlink:currency";
+const KEY = "gr8crew:currency";
 
 function guessDefaultCurrency(): CurrencyCode {
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
@@ -56,7 +56,7 @@ export function CurrencyPicker() {
             // ignore
           }
           // Let interested components react without pulling in state libs.
-          window.dispatchEvent(new Event("crewlink:currency"));
+          window.dispatchEvent(new Event("gr8crew:currency"));
         }}
         className="bg-transparent text-slate-100 outline-none"
       >

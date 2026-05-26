@@ -12,7 +12,7 @@ type FxCache = {
 };
 
 function getCacheKey(base: string) {
-  return `__crewlink_fx_cache_${base.toUpperCase()}` as const;
+  return `__gr8crew_fx_cache_${base.toUpperCase()}` as const;
 }
 
 async function fetchRates(base: string) {

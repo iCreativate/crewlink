@@ -1,4 +1,4 @@
-// CrewLink — PostgreSQL schema (User.id matches Supabase Auth user id)
+// gr8crew — PostgreSQL schema (User.id matches Supabase Auth user id)
 
 generator client {
   provider      = "prisma-client-js"

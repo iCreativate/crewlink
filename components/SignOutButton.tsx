@@ -3,18 +3,29 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useToast } from "@/components/ui/ToastProvider";
 
 export function SignOutButton() {
   const router = useRouter();
+  const toast = useToast();
   const [pending, setPending] = useState(false);
 
   async function onSignOut() {
     setPending(true);
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    setPending(false);
-    router.push("/");
-    router.refresh();
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast.error(error.message);
+        setPending(false);
+        return;
+      }
+      router.push("/login");
+      router.refresh();
+    } catch {
+      toast.error("Could not sign out. Try again.");
+      setPending(false);
+    }
   }
 
   return (

@@ -11,7 +11,7 @@ export async function TopNav() {
     <header className="navbar sticky top-0 z-40">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
         <Link href="/" className="text-lg font-semibold tracking-tight text-white">
-          Crew<span className="text-sky-400">Link</span>
+          gr8<span className="text-sky-400">crew</span>
         </Link>
         <nav className="flex flex-wrap items-center gap-2 text-sm sm:gap-4">
           <Link className="text-slate-300 hover:text-white" href="/jobs">

@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { postLoginPathForRole } from "@/lib/auth/post-login";
+import { useToast } from "@/components/ui/ToastProvider";
 
 type MeResponse = {
   authenticated: true;
@@ -15,6 +16,7 @@ type MeResponse = {
 
 export function LoginForm() {
   const router = useRouter();
+  const toast = useToast();
   const search = useSearchParams();
   const callbackUrl = search.get("callbackUrl");
   const authError = search.get("error") === "auth";
@@ -146,7 +148,10 @@ export function LoginForm() {
 
       <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
         No account?{" "}
-        <Link href="/register" className="font-medium text-sky-700 hover:underline dark:text-sky-400">
+        <Link
+          href={callbackUrl ? `/register?callbackUrl=${encodeURIComponent(callbackUrl)}` : "/register"}
+          className="font-medium text-sky-700 hover:underline dark:text-sky-400"
+        >
           Register
         </Link>
       </p>

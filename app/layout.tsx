@@ -17,8 +17,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "CrewLink — Crew & media jobs",
-    template: "%s · CrewLink",
+    default: "gr8crew — Crew & media jobs",
+    template: "%s · gr8crew",
   },
   description:
     "Connect freelancers with media houses: jobs, profiles, and portfolio in one production-ready workspace.",
@@ -40,7 +40,7 @@ export default function RootLayout({
           <FreelancerEmergencyListener />
           <main className="flex-1">{children}</main>
           <footer className="border-t border-zinc-200 py-8 text-center text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-500">
-            © {new Date().getFullYear()} CrewLink. All rights reserved.
+            © {new Date().getFullYear()} gr8crew. All rights reserved.
           </footer>
         </Providers>
       </body>

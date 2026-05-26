@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { LazyVideo } from "@/components/portfolio/LazyVideo";
 import { BoostPostButton } from "@/components/feed/BoostPostButton";
 import { MediaCarousel, type MediaItem } from "@/components/feed/MediaCarousel";
@@ -214,14 +214,16 @@ function Media({
 export function FeedPostCard({
   post,
   onPatch,
+  nested = false,
 }: {
   post: FeedPost;
   onPatch: (id: string, patch: Partial<FeedPost>) => void;
+  nested?: boolean;
 }) {
   const [busy, setBusy] = useState<"like" | "share" | null>(null);
   const [likeBump, setLikeBump] = useState(false);
   const [reactionOpen, setReactionOpen] = useState(false);
-  const holdRef = useState<{ t: number | null }>({ t: null })[0];
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [commentOpen, setCommentOpen] = useState(false);
   const [commentBody, setCommentBody] = useState("");
   const [commentBusy, setCommentBusy] = useState(false);
@@ -569,9 +571,11 @@ export function FeedPostCard({
               </div>
             </div>
           </div>
-          <div className="shrink-0">
-            <BoostPostButton postId={post.id} />
-          </div>
+          {!nested ? (
+            <div className="shrink-0">
+              <BoostPostButton postId={post.id} />
+            </div>
+          ) : null}
         </header>
 
         {post.collab ? (
@@ -585,7 +589,7 @@ export function FeedPostCard({
           <div className="repost-block">
             <p className="meta-text text-[11px] font-semibold uppercase tracking-wider">Reposted</p>
             <div className="mt-3">
-              <FeedPostCard post={post.sharedPost} onPatch={() => {}} />
+              <FeedPostCard post={post.sharedPost} onPatch={onPatch} nested />
             </div>
           </div>
         ) : null}
@@ -621,16 +625,16 @@ export function FeedPostCard({
           <div
             className="relative"
             onPointerDown={() => {
-              if (holdRef.t) window.clearTimeout(holdRef.t);
-              holdRef.t = window.setTimeout(() => setReactionOpen(true), 420) as unknown as number;
+              if (holdTimerRef.current) window.clearTimeout(holdTimerRef.current);
+              holdTimerRef.current = window.setTimeout(() => setReactionOpen(true), 420);
             }}
             onPointerUp={() => {
-              if (holdRef.t) window.clearTimeout(holdRef.t);
-              holdRef.t = null;
+              if (holdTimerRef.current) window.clearTimeout(holdTimerRef.current);
+              holdTimerRef.current = null;
             }}
             onPointerLeave={() => {
-              if (holdRef.t) window.clearTimeout(holdRef.t);
-              holdRef.t = null;
+              if (holdTimerRef.current) window.clearTimeout(holdTimerRef.current);
+              holdTimerRef.current = null;
             }}
           >
             <ActionButton

@@ -3,9 +3,9 @@ import { PrismaClient } from "@prisma/client";
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient | undefined };
 
 function logDatabaseUrlShapeOnce() {
-  const g = globalThis as unknown as { __crewlink_db_url_logged?: boolean };
-  if (g.__crewlink_db_url_logged) return;
-  g.__crewlink_db_url_logged = true;
+  const g = globalThis as unknown as { __gr8crew_db_url_logged?: boolean };
+  if (g.__gr8crew_db_url_logged) return;
+  g.__gr8crew_db_url_logged = true;
 
   const raw = process.env.DATABASE_URL;
   if (!raw) {

@@ -1,7 +1,9 @@
 import { Suspense } from "react";
 import { LoginForm } from "@/components/LoginForm";
+import { redirectIfAuthenticated } from "@/lib/auth/server";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  await redirectIfAuthenticated();
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
       <Suspense

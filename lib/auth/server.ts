@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { UserRole } from "@prisma/client";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
@@ -33,10 +34,20 @@ export async function getAuthContext(): Promise<AuthContext | null> {
   return { supabaseUser, appUser };
 }
 
-export async function requireAuth(loginPath = "/login"): Promise<AuthContext> {
+export async function requireAuth(loginPath = "/login", callbackPath?: string): Promise<AuthContext> {
   const ctx = await getAuthContext();
-  if (!ctx) redirect(`${loginPath}?callbackUrl=${encodeURIComponent("/dashboard")}`);
+  if (!ctx) {
+    const h = await headers();
+    const pathname = callbackPath ?? h.get("x-pathname") ?? "/dashboard";
+    const safe = pathname.startsWith("/") && !pathname.startsWith("//") ? pathname : "/dashboard";
+    redirect(`${loginPath}?callbackUrl=${encodeURIComponent(safe)}`);
+  }
   return ctx;
+}
+
+export async function redirectIfAuthenticated(): Promise<void> {
+  const ctx = await getAuthContext();
+  if (ctx) redirect(postLoginPathForRole(ctx.appUser.role));
 }
 
 export async function requireRole(role: UserRole, redirectTo: string): Promise<AuthContext> {
