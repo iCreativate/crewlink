@@ -223,7 +223,7 @@ export function FeedPostCard({
   const [busy, setBusy] = useState<"like" | "share" | null>(null);
   const [likeBump, setLikeBump] = useState(false);
   const [reactionOpen, setReactionOpen] = useState(false);
-  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const holdTimerRef = useRef<number | null>(null);
   const [commentOpen, setCommentOpen] = useState(false);
   const [commentBody, setCommentBody] = useState("");
   const [commentBusy, setCommentBusy] = useState(false);
